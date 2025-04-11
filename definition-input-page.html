@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dictionary Lookup</title>
+    <!-- Google AdSense Script (Replace with your actual client ID) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXxxxxxxxxxxxxx"
+     crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+            padding-top: 5vh;
+        }
+        .ad-container {
+            margin: 1rem 0;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .results-container {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            display: none;
+        }
+
+        .results-container.visible {
+            display: block;
+        }
+
+        .word-header {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .word-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .phonetic {
+            color: #666;
+            font-style: italic;
+        }
+
+        .part-of-speech {
+            color: #007bff;
+            font-weight: 500;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .definition-item {
+            margin-bottom: 1rem;
+            padding-left: 1rem;
+            border-left: 3px solid #e0e0e0;
+        }
+
+        .definition-text {
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .example {
+            color: #666;
+            font-style: italic;
+            margin-top: 0.5rem;
+            padding-left: 1rem;
+        }
+
+        .synonyms {
+            margin-top: 0.5rem;
+            color: #28a745;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            margin-top: 1rem;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .error {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Input your word here for its definition</h1>
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="wordInput" 
+                placeholder="Enter a word..."
+                aria-label="Enter a word to get its definition"
+            >
+            <button 
+                id="searchButton"
+                onclick="lookupDefinition()"
+                aria-label="Look up definition"
+            >
+                Search
+            </button>
+        </div>
+        <div id="loadingIndicator" class="loading">Searching for definition...</div>
+        <div class="ad-container">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                 data-ad-slot="XXXXXXXXXX"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+        </div>
+        <div id="resultsContainer" class="results-container">
+            <div class="word-header">
+                <h2 class="word-title"></h2>
+                <span class="phonetic"></span>
+            </div>
+            <div id="definitionsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Push ads after page load to improve performance
+            window.addEventListener('load', () => {
+                try {
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                } catch (e) {
+                    console.error('Ad initialization error:', e);
+                }
+            });
+        })();
+        async function lookupDefinition() {
+
+
+
+
+            const randomWord = await getRandomWord(); 
+            const input = document.getElementById('wordInput');
+            const button = document.getElementById('searchButton');
+            const word = input.value.trim();
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const definitionsContainer = document.getElementById('definitionsContainer');
+            
+
+
+            // Clear previous results and show loading state
+            definitionsContainer.innerHTML = '';
+            resultsContainer.classList.remove('visible');
+            loadingIndicator.classList.add('visible');
+            button.disabled = true;
+            document.querySelector('.word-title').textContent = '';
+            document.querySelector('.phonetic').textContent = '';
+            try {
+                // Make API request
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+                if (!response.ok) {
+                    throw new Error('Word not found');
+                } 
+                const data = await response.json();
+
+                // Update word title and phonetic
+                document.querySelector('.word-title').textContent = word;
+                const phonetic = data[0].phonetic || (data[0].phonetics[0]?.text || '');
+                document.querySelector('.phonetic').textContent = phonetic;
+
+                // Process each meaning
+                data[0].meanings.forEach(meaning => {
+                    // Create part of speech header
+                    const partOfSpeech = document.createElement('div');
+                    partOfSpeech.className = 'part-of-speech';
+                    partOfSpeech.textContent = meaning.partOfSpeech;
+                    definitionsContainer.appendChild(partOfSpeech);
+
+                    // Process each definition
+                    meaning.definitions.forEach(def => {
+                        const definitionItem = document.createElement('div');
+                        definitionItem.className = 'definition-item';
+
+                        // Add definition text
+                        const definitionText = document.createElement('div');
+                        definitionText.className = 'definition-text';
+                        definitionText.textContent = def.definition;
+                        definitionItem.appendChild(definitionText);
+
+                        // Add example if available
+                        if (def.example) {
+                            const example = document.createElement('div');
+                            example.className = 'example';
+                            example.textContent = `Example: "${def.example}"`;
+                            definitionItem.appendChild(example);
+                        }
+
+                        definitionsContainer.appendChild(definitionItem);
+                    });
+
+                    // Add synonyms if available
+                    if (meaning.synonyms && meaning.synonyms.length > 0) {
+                        const synonyms = document.createElement('div');
+                        synonyms.className = 'synonyms';
+                        synonyms.textContent = `Synonyms: ${meaning.synonyms.join(', ')}`;
+                        definitionsContainer.appendChild(synonyms);
+                    }
+                });
+
+                // Show results
+                resultsContainer.classList.add('visible');
+            } catch (error) {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(randomWord)}`);
+                if (!response.ok) {
+                    throw new Error('Word not found');
+                } 
+                // Handle errors
+                const data = await response.json();
+
+                // Update word title and phonetic
+                document.querySelector('.word-title').textContent = word;
+                const phonetic = data[0].phonetic || (data[0].phonetics[0]?.text || '');
+                document.querySelector('.phonetic').textContent = '';
+
+                // Process each meaning
+                data[0].meanings.forEach(meaning => {
+                    // Create part of speech header
+                    const partOfSpeech = document.createElement('div');
+                    partOfSpeech.className = 'part-of-speech';
+                    partOfSpeech.textContent = meaning.partOfSpeech;
+                    definitionsContainer.appendChild(partOfSpeech);
+
+                    // Process each definition
+                    meaning.definitions.forEach(def => {
+                        const definitionItem = document.createElement('div');
+                        definitionItem.className = 'definition-item';
+
+                        // Add definition text
+                        const definitionText = document.createElement('div');
+                        definitionText.className = 'definition-text';
+                        definitionText.textContent = def.definition;
+                        definitionItem.appendChild(definitionText);
+
+                        // Add example if available
+
+                        definitionsContainer.appendChild(definitionItem);
+                    });
+
+                    // Add synonyms if available
+                });
+
+                // Show results
+                resultsContainer.classList.add('visible');
+                resultsContainer.classList.add('visible');
+            } finally {
+                // Clean up
+                loadingIndicator.classList.remove('visible');
+                button.disabled = false;
+            }
+        }
+
+        async function checkWordValidity(word) {
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                return response.ok;
+            } catch (error) {
+                console.error('Error checking word validity:', error);
+                return false;
+            }
+        }
+
+        async function getRandomWord() {
+            try {
+                const response = await fetch('words.txt');
+                const text = await response.text();
+                const words = text.trim().split('\n');
+                
+                // Add a maximum number of attempts to prevent infinite loops
+                const maxAttempts = 1000;
+                for (let i = 0; i < maxAttempts; i++) {
+                    const randomIndex = Math.floor(Math.random() * words.length);
+                    const randomWord = words[randomIndex].trim();
+                    
+                    // Await the validity check
+                    const isValid = await checkWordValidity(randomWord);
+                    if (isValid) {
+                        return randomWord;
+                    }
+                }
+                
+                // If no valid word is found after max attempts
+                return null;
+            } catch (error) {
+                console.error('Error reading words file:', error);
+                return null;
+            }
+        }
+
+        async function checkWordValidity(word) {
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                return response.ok;
+            } catch (error) {
+                console.error('Error checking word validity:', error);
+                return false;
+            }
+        }
+        // Allow form submission with Enter key
+        document.getElementById('wordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { 
+                lookupDefinition();
+            }
+        });
+    </script>
+</body>
+</html>
